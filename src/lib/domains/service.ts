@@ -18,6 +18,7 @@ import { getManualDomainDns } from "@/lib/domains/manual-dns";
 import { rollbackDomainProvisioning } from "@/lib/domains/rollback";
 import type { DomainProvisioningChanges } from "@/lib/domains/types";
 import { findSendingSubdomain } from "@/lib/domains/sending-status";
+import { isResendConfigured } from "@/lib/email/resend";
 
 export type DomainDnsView = {
 	routing: { records: CfDnsRecord[]; missing: CfDnsRecord[]; status?: string };
@@ -112,7 +113,9 @@ export async function getDomainDns(
 	domain: typeof domains.$inferSelect,
 ): Promise<DomainDnsView> {
 	if (isManualZone(domain.zoneId)) return getManualDomainDns(env, domain.hostname);
-	const shouldInspectSending = domain.sendingRequested;
+	// With Resend, sending DNS lives in the Resend dashboard, not Cloudflare Email Sending.
+	const sendsThroughResend = isResendConfigured(env);
+	const shouldInspectSending = domain.sendingRequested && !sendsThroughResend;
 	const [routingDns, routingSettings, sendingSubdomains] = await Promise.all([
 		getEmailRoutingDns(env, domain.zoneId),
 		getEmailRoutingSettings(env, domain.zoneId),
@@ -130,7 +133,7 @@ export async function getDomainDns(
 			status: routingSettings.status,
 		},
 		sending,
-		sendingEnabled: sendingSubdomain?.enabled ?? false,
+		sendingEnabled: sendsThroughResend ? domain.sendingRequested : (sendingSubdomain?.enabled ?? false),
 	};
 }
 
