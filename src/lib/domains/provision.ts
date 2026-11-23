@@ -10,6 +10,7 @@ import {
 	getEmailRoutingCatchAll,
 } from "@/lib/domains/catch-all-routing";
 import { isZoneApex } from "@/lib/domains/utils";
+import { isResendConfigured } from "@/lib/email/resend";
 import { hasCloudflareCredentials } from "@/lib/runtime";
 import type { DomainProvisioningChanges, DomainProvisioningResult } from "@/lib/domains/types";
 
@@ -89,7 +90,11 @@ export async function provisionDomainOnCloudflare(
 		await ensureEmailRoutingCatchAllToWorker(env, zone.id);
 	}
 
-	if (enableSending) {
+	if (enableSending && isResendConfigured(env)) {
+		// Resend delivers outgoing mail, so Cloudflare Email Sending is left
+		// untouched; the domain is verified in the Resend dashboard instead.
+		sendingEnabled = true;
+	} else if (enableSending) {
 		const subs = await listSendingSubdomains(env, zone.id);
 		const existingSub = subs.find((s) => s.name === normalized);
 		if (existingSub) {
