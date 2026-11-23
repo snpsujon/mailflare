@@ -52,6 +52,18 @@ Your inbox should be ready to send and receive emails
 
 ---
 
+## Sending through Resend
+
+Cloudflare Email Sending reaches outside recipients only on the Workers Paid plan. To send from an install on the Workers Free plan, or to use Resend for any other reason, send outgoing mail through [Resend](https://resend.com) instead:
+
+1. Add your domain in the Resend dashboard and create its DNS records in Cloudflare: the `resend._domainkey` TXT record, plus the MX and TXT records on the `send` subdomain. Leave Resend's receiving off, because Cloudflare Email Routing handles incoming mail.
+2. Create a Resend API key with **Sending access**, limited to that domain.
+3. Add it to the Worker as the `RESEND_API_KEY` secret.
+
+While `RESEND_API_KEY` is set, Mailflare sends every outgoing message and password-reset email through Resend and does not create Cloudflare Email Sending records for new domains. Remove the secret to switch back to Cloudflare Email Sending.
+
+---
+
 ## Manual deployment
 
 Install dependencies, configure the Cloudflare bindings in `wrangler.jsonc`, and run:
