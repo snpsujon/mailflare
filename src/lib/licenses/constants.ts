@@ -6,3 +6,9 @@ export const LICENSE_PRODUCT_IDS: Record<Exclude<LicensePlan, "community">, stri
 };
 
 export const LICENSE_STATUS_CHANGED_EVENT = "mailflare:license-status-changed";
+
+/**
+ * Plan this self-hosted install runs on, whatever key is activated. "team"
+ * unlocks every licensed feature; set it to null to use Paymug activation again.
+ */
+export const SELF_HOSTED_LICENSE_PLAN: Exclude<LicensePlan, "community"> | null = "team";
