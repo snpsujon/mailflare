@@ -1,6 +1,8 @@
 # Preferred: scoped API token.
 # This is an app runtime token, not the Cloudflare deploy/build token.
 CF_TOKEN=your_api_token_with_zone_email_permissions
+# Optional: send outgoing mail through Resend instead of Cloudflare Email Sending.
+# RESEND_API_KEY=re_your_sending_access_key
 # Optional: lets the admin dashboard trigger the GitHub update workflow.
 # GITHUB_UPDATE_TOKEN=github_pat_with_actions_write
 # GITHUB_UPDATE_REPO=owner/repo
