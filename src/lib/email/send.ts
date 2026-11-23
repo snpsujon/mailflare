@@ -10,6 +10,7 @@ import { getEmailAddressList, joinEmailAddressList, splitEmailAddressList } from
 import { formatMessageIdHeader, normalizeMessageId, parseMessageIdList } from "@/lib/email/threading";
 import { createAuditLog } from "@/lib/mailboxes/audit";
 import { loadMessageAttachmentContents, storeMessageAttachments, validateAttachments } from "@/lib/email/attachments";
+import { sendOutboundEmail } from "@/lib/email/resend";
 import type { AttachmentContent } from "@/lib/email/attachment-types";
 
 export type SendEmailInput = {
@@ -169,7 +170,7 @@ async function deliverEmail(env: CloudflareEnv, delivery: PreparedDelivery): Pro
 	const db = getDb(env);
 	const toAddr = joinEmailAddressList(to);
 	try {
-		const response = await env.EMAIL.send({
+		const response = await sendOutboundEmail(env, {
 			from,
 			to,
 			...(cc.length ? { cc } : {}),
@@ -196,8 +197,8 @@ async function deliverEmail(env: CloudflareEnv, delivery: PreparedDelivery): Pro
 			),
 		});
 
-		// A fresh message starts its own conversation; Cloudflare's Message-ID is what
-		// any reply will name in In-Reply-To, so key the thread by it.
+		// A fresh message starts its own conversation; the provider's message id
+		// (Cloudflare's Message-ID, or Resend's email id) keys the thread.
 		await db
 			.update(messages)
 			.set({
