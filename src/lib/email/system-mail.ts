@@ -3,10 +3,12 @@ import { getDb } from "@/db";
 import { domains, mailboxes, users } from "@/db/schema";
 import { formatEmailAddress } from "@/lib/email/address";
 import type { SystemMailInput } from "@/lib/email/system-mail-types";
+import { sendOutboundEmail } from "@/lib/email/resend";
 
 /**
  * Mail the application sends on its own behalf (password resets). It goes
- * straight through the send binding: no Sent copy, no contact upsert, no
+ * straight to the outbound transport (the send binding, or Resend when
+ * RESEND_API_KEY is set): no Sent copy, no contact upsert, no
  * webhooks, and the auto-generated headers mail systems expect.
  *
  * The From address is the primary mailbox of the first administrator on a
@@ -17,7 +19,7 @@ export async function sendSystemEmail(env: CloudflareEnv, input: SystemMailInput
 	const sender = await pickSystemSender(env);
 	if (!sender) return false;
 
-	await env.EMAIL.send({
+	await sendOutboundEmail(env, {
 		from: formatEmailAddress(sender.address, sender.name),
 		to: input.to,
 		subject: input.subject,
